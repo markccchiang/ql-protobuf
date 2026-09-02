@@ -7,7 +7,7 @@ instrument, engine and result vocabulary they carry.
 This repository holds `.proto` files and nothing else. No generated code is
 checked in — each consumer runs `protoc` for its own language, so there is one
 source of truth and no stale bindings. It is consumed as a submodule at
-`proto/` by [`QuantLib-backend`](https://github.com/markccchiang/QuantLib-backend),
+`proto/` by [`ql-backend`](https://github.com/markccchiang/ql-backend),
 whose `DESIGN.md` records the QuantLib constraints the shapes here are answers
 to; the section references in the file comments (`DESIGN §5`, `§6.3`) point
 there.
@@ -127,7 +127,7 @@ git submodule add https://github.com/markccchiang/ql-protobuf.git proto
 git submodule update --init proto
 ```
 
-In `QuantLib-backend` this lands at `proto/`, which is the `protoc` include
+In `ql-backend` this lands at `proto/`, which is the `protoc` include
 root:
 
 ```cmake
