@@ -43,6 +43,7 @@ message ClientFrame {
         UpdateMarket update_market = 12;
         PriceRequest price = 13;
         CancelRequest cancel = 14;
+        Hello hello = 15;
     }
 }
 
@@ -68,6 +69,7 @@ message ServerFrame {
         PriceResult price_result = 13;
         Error error = 14;
         ScenarioResult scenario_result = 15;
+        Capabilities capabilities = 16;
     }
 }
 
@@ -296,4 +298,79 @@ message Error {
     // Set when the id in field_path was not found, so the frontend can offer
     // the ids that were.
     repeated string known_ids = 4;
+}
+
+// ---------------------------------------------------------------------------
+// The handshake
+// ---------------------------------------------------------------------------
+
+// Asks the service what it can price.
+//
+// A request rather than something pushed on connect, because everything else
+// here is a request: one ClientFrame in, one terminal ServerFrame out,
+// correlated by request_id. An unsolicited frame would be the only one a
+// client could not account for, and would need a request_id nobody chose.
+//
+// It carries no fields. Asking is the whole message, and a version negotiation
+// this service does not perform would be a field that lies.
+message Hello {}
+
+// What this build prices, as data.
+//
+// The schema describes more than any build implements, and the difference has
+// until now lived in prose (ql-backend/HANDLERS.md) and been copied by hand
+// into each client. A copy drifts the first time a lattice tree is added, and
+// it drifts silently: the client goes on offering something the service will
+// refuse, or hides something it would now accept.
+//
+// These are *sets*, not a matrix. Whether an analytic barrier takes an
+// American exercise is a rule about a combination, and there are far more
+// combinations than are worth putting on the wire; a client still needs its
+// own table for those. What this closes is the drift that actually happens,
+// which is a value appearing in or disappearing from one of these lists.
+//
+// Several fields are strings because what they name is not an enum: `style`,
+// `payoff`, `kind` and `shape` are proto oneofs, and their arm names are the
+// only stable way to refer to them.
+message Capabilities {
+    // Free-text, for a client to show and a bug report to quote.
+    string build = 1;
+    string quantlib_version = 2;
+
+    // Instrument.kind arms that are dispatched, e.g. "option", "swap".
+    repeated string instruments = 3;
+    // Option.style arms that are built, e.g. "vanilla", "barrier".
+    repeated string option_styles = 4;
+    // Payoff.kind arms that are built, e.g. "plain", "cash_or_nothing".
+    repeated string payoffs = 5;
+
+    repeated Exercise.Type exercises = 6;
+    repeated Underlying.Process processes = 7;
+    repeated Engine.Method engine_methods = 8;
+    repeated LatticeParameters.Tree lattice_trees = 9;
+    repeated AnalyticParameters.Approximation approximations = 10;
+    repeated FdParameters.Preset fd_presets = 11;
+
+    // The ResultKinds this build maps. Asking for one outside this set is a
+    // rejection on some paths and an absent key on others, and neither is
+    // something a client should have to discover by trying.
+    repeated ResultKind result_kinds = 12;
+
+    // MarketObject.kind arms that are built, e.g. "quote", "yield_curve".
+    repeated string market_kinds = 13;
+    // YieldCurve.shape arms, e.g. "flat", "bootstrap".
+    repeated string yield_curve_shapes = 14;
+    // VolatilitySurface.shape arms, e.g. "constant".
+    repeated string volatility_shapes = 15;
+
+    repeated Index.Family index_families = 16;
+    repeated Pillar.Kind pillar_kinds = 17;
+    repeated BootstrappedCurve.Traits bootstrap_traits = 18;
+    repeated Interpolator bootstrap_interpolators = 19;
+    repeated Leg.Kind leg_kinds = 20;
+
+    // PriceRequest options this build honours. "include_additional_results"
+    // today; "include_cashflows" and "curve_samples" appear here when they are
+    // implemented, which is how a client learns it may offer them.
+    repeated string price_request_options = 21;
 }
