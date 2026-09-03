@@ -147,6 +147,19 @@ message PriceResult {
     // working.
     repeated CashFlow cashflows = 7;
     repeated Series series = 8;
+
+    // Kinds that were asked for and are not in `results`.
+    //
+    // The absence is named rather than left to be inferred, because a client
+    // that asked for vega and got a map without it cannot tell that from a
+    // vega of zero -- which is the reason this field exists and the reason it
+    // is not a rejection instead. An engine that does not publish a greek is
+    // not a client error: refusing the whole request would cost the price as
+    // well, and a client that wants the NPV would learn to ask for nothing.
+    //
+    // A kind this build does not implement at all is a different thing, and
+    // the Hello handshake answers it before the request is sent.
+    repeated ResultKind unavailable_results = 9;
 }
 
 // One row of a leg's cash-flow table.
