@@ -44,6 +44,7 @@ message ClientFrame {
         PriceRequest price = 13;
         CancelRequest cancel = 14;
         Hello hello = 15;
+        PriceBatch batch = 16;
     }
 }
 
@@ -70,6 +71,7 @@ message ServerFrame {
         Error error = 14;
         ScenarioResult scenario_result = 15;
         Capabilities capabilities = 16;
+        BatchResult batch_result = 17;
     }
 }
 
@@ -269,6 +271,33 @@ message Scenario {
     bool keep_final_value = 6;
 }
 
+// Several trades against one graph, in one frame.
+//
+// A book of forty trades was forty requests: forty round trips serialised on
+// the one worker the session owns, forty terminal frames to match up, and no
+// way to stop the lot. The market is the same for all of them and the graph is
+// already warm, so the only thing forty frames bought was forty chances to
+// interleave something else.
+//
+// Entries are priced in the order given and answered in the same order, one
+// for one, so a client matches by position and needs no ids of its own.
+//
+// A failing entry does not fail the batch. Refusing the whole thing because
+// trade 17 names a curve that is not there would throw away thirty-nine prices
+// that were computed correctly -- the same argument that made an unsupplied
+// result a named absence rather than a rejection. The exception is a failure
+// that dirties the graph: after that nothing later in the batch is trustworthy,
+// and the remaining entries are answered with what stopped them rather than
+// with a price computed against a half-invalidated graph.
+// A sweep inside a batch is refused rather than served. Both shapes already
+// mean "price this many times", and nesting them is a product with no honest
+// reply: the progress stream cannot say which entry it is on and which point
+// within it with one completed/total pair. A book of sweeps is a book of sweep
+// requests, which is what it was before.
+message PriceBatch {
+    repeated PriceRequest requests = 1;
+}
+
 message CancelRequest {
     // The request_id to cancel. The cancel itself gets its own terminal Ack,
     // because nothing downstream answers it.
@@ -359,6 +388,30 @@ message Hello {}
 // Several fields are strings because what they name is not an enum: `style`,
 // `payoff`, `kind` and `shape` are proto oneofs, and their arm names are the
 // only stable way to refer to them.
+// One reply for a whole book: one entry per PriceBatch.requests, in order.
+message BatchResult {
+    repeated Entry entries = 1;
+
+    message Entry {
+        // Exactly one. An entry that failed carries the rejection it would have
+        // been sent on its own, field_path and all, so a blotter can put the
+        // complaint on the row it belongs to.
+        oneof outcome {
+            PriceResult price = 1;
+            Error error = 2;
+        }
+    }
+
+    // How many entries were attempted before a failure dirtied the graph and
+    // the rest of the book was abandoned; zero when the whole book was priced.
+    // A count rather than an index, so "the first entry broke it" is 1 and not
+    // indistinguishable from the ordinary case.
+    //
+    // The entries are all present either way. This says that the errors from
+    // here on are consequences rather than diagnoses.
+    uint32 abandoned_after = 2;
+}
+
 message Capabilities {
     // Free-text, for a client to show and a bug report to quote.
     string build = 1;
