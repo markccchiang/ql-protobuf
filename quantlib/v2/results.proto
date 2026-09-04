@@ -264,4 +264,15 @@ message ScenarioResult {
     // Rows are axes[0], columns are axes[1], and the axis values arrive as the
     // matrix labels, so a plot needs nothing else to place its points.
     DoubleMatrix surface = 6;
+
+    // How many points were priced before a cancel stopped the sweep; zero when
+    // the whole of it ran. The axes are trimmed to what was actually priced, so
+    // everything here still lines up -- this says the ladder is a prefix of the
+    // one that was asked for rather than the whole answer.
+    //
+    // A cancelled sweep keeps its points for the same reason a cancelled batch
+    // keeps its prices: they were computed correctly, the client paid for them,
+    // and throwing them away is a second cost on top of the one the user just
+    // asked to stop paying.
+    uint32 abandoned_after = 7;
 }
