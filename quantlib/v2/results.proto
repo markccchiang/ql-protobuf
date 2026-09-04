@@ -240,15 +240,28 @@ message Series {
 // only what the bumped quote invalidated, instead of sixty round trips that
 // each rebuild everything.
 message ScenarioResult {
-    // The quote that was written, and the values it took.
-    string quote_id = 1;
-    repeated double values = 2 [packed = true];
+    // Was the quote and its values, back when a sweep had one axis.
+    reserved 1, 2;
+    reserved "quote_id", "values";
 
-    // One per value, in order. The engine echo and timing live on the
-    // enclosing PriceResult rather than being repeated per point.
+    // The quotes that were written and the values each took, outermost first.
+    repeated Axis axes = 5;
+    message Axis {
+        string quote_id = 1;
+        repeated double values = 2 [packed = true];
+    }
+
+    // One per point of the product, row-major: the last axis varies fastest,
+    // so with two axes prices[i * len(axes[1]) + j] is the price at
+    // axes[0].values[i] against axes[1].values[j]. The engine echo and timing
+    // live on the enclosing PriceResult rather than being repeated per point.
     repeated PriceResult prices = 3;
 
     // The same data pre-shaped for a plot, when the client asked for one
-    // result kind rather than the whole set.
+    // result kind rather than the whole set. One axis is a line and two are a
+    // surface; beyond that neither is filled and `prices` is the answer.
     Series series = 4;
+    // Rows are axes[0], columns are axes[1], and the axis values arrive as the
+    // matrix labels, so a plot needs nothing else to place its points.
+    DoubleMatrix surface = 6;
 }

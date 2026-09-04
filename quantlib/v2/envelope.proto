@@ -163,7 +163,12 @@ message PriceRequest {
 
     // Price once per scenario point instead of once. The reply is a
     // ScenarioResult rather than a PriceResult.
-    Scenario scenario = 7;
+    //
+    // More than one is a grid rather than a lockstep shift; see Scenario. The
+    // tag is the one the singular field used, because a singular message field
+    // parses as a one-element repeated one and a sweep of one quote is a grid
+    // with one axis.
+    repeated Scenario scenarios = 7;
 
     // Required when RESULT_KIND_IMPLIED_VOLATILITY is asked for, because the
     // question needs a price to invert and nothing else in this message is
@@ -213,12 +218,22 @@ message CurveSample {
     quantlib.v1.DayCounter day_counter = 8;
 }
 
-// A sweep of one quote.
+// One axis of a sweep.
 //
-// One request, one graph, N lazy recomputes of only what the quote
+// One request, one graph, N lazy recomputes of only what each write
 // invalidated. The point of keeping a session alive is that this costs far
 // less than N requests, and the frontend's spot ladder is the case that makes
 // it obvious.
+//
+// Several axes sweep as a product, not in lockstep: spot at 21 points against
+// vol at 5 is 105 prices, in row-major order with the last axis varying
+// fastest. That is the shape a spot x vol surface has, and asking for it as
+// five separate sweeps costs five round trips and five progress streams to say
+// the same thing on the same warm graph.
+//
+// A lockstep shift -- move these three quotes together -- is a different
+// question and is not this one. It is a market edit with an undo, which
+// UpdateMarket already does.
 message Scenario {
     string quote_id = 1;
 
@@ -236,11 +251,17 @@ message Scenario {
     // Multipliers of the quote's current value: 0.8, 0.9, 1.0 ...
     message Relative { repeated double factors = 1 [packed = true]; }
 
-    // Which single result to shape into ScenarioResult.series. Leave unset to
-    // get the full PriceResult per point and no series.
+    // Which single result to shape into ScenarioResult.series or .surface.
+    // Leave unset to get the full PriceResult per point and no plot.
+    //
+    // A property of the sweep rather than of an axis: set it on the first one.
+    // Set on a later axis it is refused, because the alternative is picking
+    // one silently and drawing a plot of something the client did not ask for.
     ResultKind plot = 5;
 
-    // Leave the quote at the last swept value instead of restoring it.
+    // Leave this quote at the last swept value instead of restoring it. Per
+    // axis, because leaving spot where the sweep ended while putting vol back
+    // is a coherent thing to want.
     //
     // Phrased this way round because proto3 defaults it to false, and the
     // default has to be the safe one: a sweep is a question, not an edit, and
@@ -379,6 +400,12 @@ message Capabilities {
     // today; "include_cashflows" and "curve_samples" appear here when they are
     // implemented, which is how a client learns it may offer them.
     repeated string price_request_options = 21;
+
+    // The most points one sweep may hold, counting the product of its axes.
+    // A grid multiplies, so a mistyped step count is not a slow request but a
+    // session-length one; the limit is advertised so a client can refuse it
+    // before spending the round trip.
+    uint32 max_scenario_points = 22;
 }
 
 // The solve behind RESULT_KIND_IMPLIED_VOLATILITY.
