@@ -454,6 +454,12 @@ message Capabilities {
     // implemented, which is how a client learns it may offer them.
     repeated string price_request_options = 21;
 
+    // ClientFrame payload arms this build serves, e.g. "price", "batch". A
+    // frame is not a PriceRequest option and does not belong in the list above:
+    // this is how a client learns it may send a whole book at once rather than
+    // discovering it by sending one and reading the rejection.
+    repeated string frames = 23;
+
     // The most points one sweep may hold, counting the product of its axes.
     // A grid multiplies, so a mistyped step count is not a slow request but a
     // session-length one; the limit is advertised so a client can refuse it
