@@ -45,6 +45,7 @@ message ClientFrame {
         CancelRequest cancel = 14;
         Hello hello = 15;
         PriceBatch batch = 16;
+        ResumeSession resume_session = 17;
     }
 }
 
@@ -103,6 +104,40 @@ message SessionOpened {
     // posted forty objects and got thirty-nine can see which one is missing
     // without diffing its own request.
     repeated string market_ids = 3;
+
+    // The bearer secret for ResumeSession, minted by the gateway and never
+    // reused. It is the only thing between this session and any other page on
+    // the machine, since a WebSocket upgrade is not subject to the same-origin
+    // policy (DESIGN §9.6) — hold it in memory, do not log it, and do not put
+    // it in a URL. Empty when the service is running with the grace window
+    // turned off, which is how a client learns resume is not on offer.
+    string resume_token = 4;
+
+    // How long this session outlives its socket. Zero means it does not.
+    uint32 resume_grace_seconds = 5;
+
+    // True when this frame answers a ResumeSession rather than an
+    // OpenSession: the same session, the same graph, the same id. The other
+    // fields are what the original open reported, replayed — bootstrap_seconds
+    // is what the bootstrap cost then and not a second one now.
+    bool resumed = 6;
+}
+
+// Take back a session whose socket died, within its grace window.
+//
+// The session, its graph and its worker seat outlive the socket for
+// `resume_grace_seconds`, and so does whatever was running in it: a Monte
+// Carlo that was half way through when the network blinked keeps running, and
+// its terminal frame is held for the client that comes back for it
+// (DESIGN §9.4).
+//
+// A resume that is refused — wrong token, expired window, a session that was
+// closed rather than dropped — is SESSION_NOT_FOUND, the same answer for all
+// of them so that a wrong token cannot be told apart from an absent one. The
+// client's move is the same in every case: open a session and replay.
+message ResumeSession {
+    string session_id = 1;
+    string resume_token = 2;
 }
 
 message CloseSession {}
