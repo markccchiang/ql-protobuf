@@ -282,12 +282,35 @@ message ForwardStart {
     Flag performance = 2;
 }
 
+// A series of forward-starting options, each struck at a fraction of the spot
+// at the start of its own period. Also called a ratchet.
+//
+// The strike is `Option.payoff.percentage_strike.moneyness`, as it is for
+// `ForwardStart`: `CliquetOption` takes a `PercentageStrikePayoff` and casts
+// anything else back to one (ql/instruments/cliquetoption.cpp:44).
+//
+// The four cap and floor fields are reserved rather than served, and this is
+// not a gap in one implementation. `CliquetOption::setupArguments` copies the
+// reset dates and nothing else -- the comment above the line says "set accrued
+// coupon, last fixing, caps, floors" and the line does not
+// (ql/instruments/cliquetoption.cpp:32) -- so the four never reach an engine
+// at all, and all three engines refuse anything but Null for them besides
+// (analyticcliquetengine.cpp:38-42). The instrument's own header carries the
+// \todo. A request setting one is refused by name rather than priced without
+// it.
 message Cliquet {
     repeated quantlib.v1.Date reset_dates = 1;
     double local_cap = 2;
     double local_floor = 3;
     double global_cap = 4;
     double global_floor = 5;
+
+    // Pays the return of each period rather than the amount, which is a
+    // different engine rather than a scaling of the same number -- the same
+    // distinction ForwardStart.performance draws, and QuantLib draws it with
+    // the same word (ql/pricingengines/cliquet/analyticperformanceengine.hpp).
+    // Without this the two performance engines are unreachable.
+    Flag performance = 6;
 }
 
 // A digital that also knocks.
