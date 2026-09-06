@@ -290,8 +290,15 @@ message Cliquet {
     double global_floor = 5;
 }
 
-// A digital that also knocks. The plain digital payoffs are on Payoff; this
-// style exists for the barrier-style knock-in/knock-out variants.
+// A digital that also knocks.
+//
+// Reserved rather than served. QuantLib has no digital-knock instrument: the
+// product is a BarrierOption carrying a binary payoff, priced by
+// AnalyticBinaryBarrierEngine, and that is a request this schema can already
+// express. These three fields re-declare Barrier.type, Barrier.level and
+// CashOrNothingPayoff.cash_payoff, and `knock_in` is narrower than
+// Barrier.Type besides -- it cannot say which side the barrier is on. The
+// service refuses this arm and names the shape to send instead.
 message Digital {
     Flag knock_in = 1;
     double barrier = 2;
