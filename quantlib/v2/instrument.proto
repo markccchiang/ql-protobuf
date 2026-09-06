@@ -299,6 +299,14 @@ message Digital {
 }
 
 // An option on an option.
+//
+// The mother option is the option's own payoff and exercise: CompoundOption
+// derives from OneAssetOption and hands those two straight to it
+// (ql/instruments/compoundoption.cpp:31), so `mother_payoff` and
+// `mother_exercise` re-declare what `Option.payoff` and `Option.exercise`
+// already carry. Rather than pick which copy wins, the service refuses them
+// by name; they are kept here as reserved tags. Send the mother where every
+// other style takes it, and only the daughter in this block.
 message Compound {
     Payoff mother_payoff = 1;
     Exercise mother_exercise = 2;
