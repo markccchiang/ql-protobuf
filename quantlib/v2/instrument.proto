@@ -321,8 +321,24 @@ message Compound {
     Exercise daughter_exercise = 4;
 }
 
-// Simple chooser: one choice date, one strike. Complex chooser: separate call
-// and put strikes and expiries.
+// The right to decide later whether this is a call or a put.
+//
+// Simple chooser: one strike and one expiry, shared by both sides. Complex
+// chooser: a strike and an expiry of its own for each. Which one is being
+// asked for is read off `put_expiry` -- SimpleChooserOption takes exactly one
+// strike and one exercise, so a second expiry is the thing it has no room for.
+//
+// The strike and the (call) expiry are the option's own `payoff` and
+// `exercise`: both instruments derive from OneAssetOption and hand it a
+// PlainVanillaPayoff struck at that strike together with that exercise
+// (ql/instruments/simplechooseroption.cpp:30,
+// ql/instruments/complexchooseroption.cpp:34). So `call_strike` and
+// `call_expiry` re-declare what the request already carries, and are reserved
+// tags the service refuses by name -- as `Compound.mother_payoff` is.
+//
+// `Payoff.type` has no meaning on a chooser and must be left unset: which side
+// this becomes is the thing being chosen, and the instrument overwrites the
+// type regardless.
 message Chooser {
     quantlib.v1.Date choice_date = 1;
     double call_strike = 2;
