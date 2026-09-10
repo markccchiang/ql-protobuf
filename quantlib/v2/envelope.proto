@@ -500,6 +500,16 @@ message Capabilities {
     // session-length one; the limit is advertised so a client can refuse it
     // before spending the round trip.
     uint32 max_scenario_points = 22;
+
+    // The most trades one PriceBatch may carry. The sweep ceiling's sibling:
+    // a frame can hold tens of thousands of Monte Carlos, each of which runs
+    // to completion on the seat it starts on, and a blotter is tens of rows.
+    uint32 max_batch_entries = 24;
+
+    // The most points one CurveSample may ask for. Each point is a
+    // term-structure query on the live graph, so a sample past what a chart
+    // can show is a request in its own right rather than a decoration on one.
+    uint32 max_curve_sample_points = 25;
 }
 
 // The solve behind RESULT_KIND_IMPLIED_VOLATILITY.
