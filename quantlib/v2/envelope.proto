@@ -406,23 +406,6 @@ message Error {
 // this service does not perform would be a field that lies.
 message Hello {}
 
-// What this build prices, as data.
-//
-// The schema describes more than any build implements, and the difference has
-// until now lived in prose (ql-backend/doc/HANDLERS.md) and been copied by
-// hand into each client. A copy drifts the first time a lattice tree is added,
-// and it drifts silently: the client goes on offering something the service
-// will refuse, or hides something it would now accept.
-//
-// These are *sets*, not a matrix. Whether an analytic barrier takes an
-// American exercise is a rule about a combination, and there are far more
-// combinations than are worth putting on the wire; a client still needs its
-// own table for those. What this closes is the drift that actually happens,
-// which is a value appearing in or disappearing from one of these lists.
-//
-// Several fields are strings because what they name is not an enum: `style`,
-// `payoff`, `kind` and `shape` are proto oneofs, and their arm names are the
-// only stable way to refer to them.
 // One reply for a whole book: one entry per PriceBatch.requests, in order.
 message BatchResult {
     repeated Entry entries = 1;
@@ -447,6 +430,23 @@ message BatchResult {
     uint32 abandoned_after = 2;
 }
 
+// What this build prices, as data.
+//
+// The schema describes more than any build implements, and the difference has
+// until now lived in prose (ql-backend/doc/HANDLERS.md) and been copied by
+// hand into each client. A copy drifts the first time a lattice tree is added,
+// and it drifts silently: the client goes on offering something the service
+// will refuse, or hides something it would now accept.
+//
+// These are *sets*, not a matrix. Whether an analytic barrier takes an
+// American exercise is a rule about a combination, and there are far more
+// combinations than are worth putting on the wire; a client still needs its
+// own table for those. What this closes is the drift that actually happens,
+// which is a value appearing in or disappearing from one of these lists.
+//
+// Several fields are strings because what they name is not an enum: `style`,
+// `payoff`, `kind` and `shape` are proto oneofs, and their arm names are the
+// only stable way to refer to them.
 message Capabilities {
     // Free-text, for a client to show and a bug report to quote.
     string build = 1;
