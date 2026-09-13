@@ -131,7 +131,7 @@ In `ql-backend` this lands at `proto/`, which is the `protoc` include
 root:
 
 ```cmake
-add_library(qlservice_proto OBJECT
+add_library(qlbackend_proto OBJECT
     proto/quantlib/v1/conventions.proto
     proto/quantlib/v2/market.proto
     proto/quantlib/v2/instrument.proto
@@ -140,9 +140,9 @@ add_library(qlservice_proto OBJECT
     proto/quantlib/v2/envelope.proto)
 
 protobuf_generate(
-    TARGET qlservice_proto
+    TARGET qlbackend_proto
     IMPORT_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/proto"
-    PROTOC_OUT_DIR "${QLSERVICE_PROTO_OUT}")
+    PROTOC_OUT_DIR "${QLBACKEND_PROTO_OUT}")
 ```
 
 Import paths in generated code keep the `quantlib/v2/` prefix, so the output
