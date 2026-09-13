@@ -409,10 +409,10 @@ message Hello {}
 // What this build prices, as data.
 //
 // The schema describes more than any build implements, and the difference has
-// until now lived in prose (ql-backend/HANDLERS.md) and been copied by hand
-// into each client. A copy drifts the first time a lattice tree is added, and
-// it drifts silently: the client goes on offering something the service will
-// refuse, or hides something it would now accept.
+// until now lived in prose (ql-backend/doc/HANDLERS.md) and been copied by
+// hand into each client. A copy drifts the first time a lattice tree is added,
+// and it drifts silently: the client goes on offering something the service
+// will refuse, or hides something it would now accept.
 //
 // These are *sets*, not a matrix. Whether an analytic barrier takes an
 // American exercise is a rule about a combination, and there are far more
