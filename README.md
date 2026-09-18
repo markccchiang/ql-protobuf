@@ -1,3 +1,13 @@
+<!-- The logo is served from ql-backend, which keeps the logo set and the
+     script that generates it, so this repository can go on holding .proto
+     files and nothing else. -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/markccchiang/ql-backend/main/assets/logo/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/markccchiang/ql-backend/main/assets/logo/logo.svg" alt="Interactive QuantLib Service" width="560">
+  </picture>
+</p>
+
 # QuantLib Service Wire Schema
 
 The Protobuf schema for the interactive QuantLib service: the frames a client
