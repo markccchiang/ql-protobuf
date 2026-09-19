@@ -302,10 +302,13 @@ message ForwardStart {
 // it.
 message Cliquet {
     repeated quantlib.v1.Date reset_dates = 1;
-    double local_cap = 2;
-    double local_floor = 3;
-    double global_cap = 4;
-    double global_floor = 5;
+    // Optional, so that 0 is a value: a floor at zero is the commonest floor
+    // there is, and without presence it read as unset and priced without
+    // being refused.
+    optional double local_cap = 2;
+    optional double local_floor = 3;
+    optional double global_cap = 4;
+    optional double global_floor = 5;
 
     // Pays the return of each period rather than the amount, which is a
     // different engine rather than a scaling of the same number -- the same
@@ -448,6 +451,9 @@ message Leg {
     // field read as 0 and overrode the index.
     optional uint32 fixing_days = 7;
     Flag in_arrears = 8;
+    // Per period, or one for all, as notionals are. Rates are decimals
+    // throughout: a spread of 0.001 is ten basis points over the fixing, and
+    // a gearing multiplies the fixing before the spread is added.
     repeated double gearings = 9;
     repeated double spreads = 10;
     repeated double caps = 11;
@@ -554,6 +560,7 @@ message Bond {
     // A bond is a leg plus a redemption. Fixed, floating, zero-coupon,
     // amortising and CMS bonds differ only in the leg.
     Leg leg = 4;
+    // Per 100 of face, as QuantLib's bonds take it: 100 is at par.
     double redemption = 5;
 
     string discount_curve_id = 6;
@@ -572,6 +579,7 @@ message Bond {
 message CreditDefaultSwap {
     Flag buy_protection = 1;
     double notional = 2;
+    // The running spread as a decimal a year: 0.01 is 100 basis points.
     double spread = 3;
     Schedule schedule = 4;
     quantlib.v1.DayCounter day_counter = 5;
@@ -580,7 +588,7 @@ message CreditDefaultSwap {
     string discount_curve_id = 7;
     double recovery_rate = 8;
 
-    // Upfront quoted trades.
+    // Upfront quoted trades, as a fraction of the notional.
     double upfront = 9;
     quantlib.v1.Date upfront_date = 10;
 

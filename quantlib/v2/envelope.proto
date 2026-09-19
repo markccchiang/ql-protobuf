@@ -285,6 +285,9 @@ message Scenario {
     // Named begin/end rather than from/to: `from` is a keyword in
     // Python and several other generated languages, where the field
     // then becomes unreachable or is silently renamed.
+    // `steps` counts points, not the gaps between them: begin and end are
+    // both priced, so 41 from 80 to 120 is every whole number, and fewer
+    // than two is refused.
     message Linear { double begin = 1; double end = 2; uint32 steps = 3; }
     // Multipliers of the quote's current value: 0.8, 0.9, 1.0 ...
     message Relative { repeated double factors = 1 [packed = true]; }
