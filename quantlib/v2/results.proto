@@ -65,8 +65,9 @@ message DateArray {
 //
 // Kept as an enum rather than left to the additional-results map because
 // these are the ones the service computes on the instrument itself
-// (ql/option.hpp:69-86, Greeks and MoreGreeks), and asking for one an engine
-// cannot supply must be a named rejection rather than a missing map key.
+// (ql/option.hpp:69-86, Greeks and MoreGreeks), and one an engine cannot
+// supply must be named as absent rather than left a missing map key -- see
+// PriceResult.unavailable_results.
 enum ResultKind {
     RESULT_KIND_UNSPECIFIED = 0;
     RESULT_KIND_NPV = 1;
@@ -253,8 +254,8 @@ message ScenarioResult {
 
     // One per point of the product, row-major: the last axis varies fastest,
     // so with two axes prices[i * len(axes[1]) + j] is the price at
-    // axes[0].values[i] against axes[1].values[j]. The engine echo and timing
-    // live on the enclosing PriceResult rather than being repeated per point.
+    // axes[0].values[i] against axes[1].values[j]. Each is a whole
+    // PriceResult, with its own engine echo and calculation time.
     repeated PriceResult prices = 3;
 
     // The same data pre-shaped for a plot, when the client asked for one
@@ -266,9 +267,11 @@ message ScenarioResult {
     DoubleMatrix surface = 6;
 
     // How many points were priced before a cancel stopped the sweep; zero when
-    // the whole of it ran. The axes are trimmed to what was actually priced, so
-    // everything here still lines up -- this says the ladder is a prefix of the
-    // one that was asked for rather than the whole answer.
+    // the whole of it ran. `prices` is then a prefix of the product that was
+    // asked for. With one axis, the axis is trimmed to the points priced, so
+    // everything here still lines up. A grid stopped mid-row has no rectangle
+    // to describe: its axes are cleared, neither plot is filled, and the
+    // prefix is read against the axes the request sent.
     //
     // A cancelled sweep keeps its points for the same reason a cancelled batch
     // keeps its prices: they were computed correctly, the client paid for them,

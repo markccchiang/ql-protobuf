@@ -181,9 +181,10 @@ message PriceRequest {
     Instrument instrument = 1;
     Engine engine = 2;
 
-    // What to compute besides the NPV. An engine that cannot supply one is a
-    // named rejection, not a missing key: a frontend that asked for vega and
-    // got a map without it cannot tell that from a vega of zero.
+    // What to compute besides the NPV. One the engine cannot supply comes
+    // back named in PriceResult.unavailable_results rather than as a missing
+    // key: a frontend that asked for vega and got a map without it cannot
+    // tell that from a vega of zero. The price is still returned.
     repeated ResultKind results = 3;
 
     // Also return everything the engine published in its own
@@ -346,12 +347,18 @@ message CancelRequest {
 message Progress {
     uint64 completed = 1;
     uint64 total = 2;
-    double running_npv = 3;
-    // Present once the estimate is meaningful, so a client can stop early on
-    // its own terms.
-    double running_standard_error = 4;
-    // Scenario sweeps report which point they are on instead.
-    uint32 scenario_point = 5;
+    // The latest number: a batched Monte Carlo's running mean, a sweep's price
+    // at the point just finished, a batch's NPV for the entry just finished.
+    // Unset when there is none -- a batch entry that failed -- because 0 is a
+    // price.
+    optional double running_npv = 3;
+    // The standard error of running_npv, for a client that would stop early on
+    // its own terms. No engine in this build reports one mid-run, so it is
+    // never set; optional so that its absence cannot read as an error of zero.
+    optional double running_standard_error = 4;
+    // Sweeps only: the index into ScenarioResult.prices of the point just
+    // priced. Optional because 0 is the first point.
+    optional uint32 scenario_point = 5;
 }
 
 message Ack {}

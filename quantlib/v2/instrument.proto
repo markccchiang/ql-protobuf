@@ -132,7 +132,9 @@ message Payoff {
         OPTION_TYPE_CALL = 1;
         OPTION_TYPE_PUT = 2;
     }
-    // Required by every arm except `floating`, which has no type of its own.
+    // Required by every arm, `floating` included: a floating-strike lookback
+    // is still a call or a put. The one exception is a chooser, whose side is
+    // what is chosen -- there it must be left unset.
     OptionType type = 1;
 
     oneof kind {
