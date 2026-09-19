@@ -441,7 +441,10 @@ message Leg {
 
     // Floating legs.
     string index_id = 6;
-    uint32 fixing_days = 7;
+    // Unset means the index's own fixing days. Optional because 0 is a real
+    // setting -- fix on the accrual start -- and without presence an unset
+    // field read as 0 and overrode the index.
+    optional uint32 fixing_days = 7;
     Flag in_arrears = 8;
     repeated double gearings = 9;
     repeated double spreads = 10;
